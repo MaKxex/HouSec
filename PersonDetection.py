@@ -16,8 +16,7 @@ print("Пуск скрипта")
 def PersonD():
     cv2.startWindowThread()
 
-    #cap = cv2.VideoCapture(1)
-    cap1 = cv2.VideoCapture("kilo3.mp4")
+    cap = cv2.VideoCapture(1)
 
     cap1.set(cv2.CAP_PROP_FPS, int(15))
 
