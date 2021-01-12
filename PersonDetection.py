@@ -18,14 +18,14 @@ def PersonD():
 
     cap = cv2.VideoCapture(1)
 
-    cap1.set(cv2.CAP_PROP_FPS, int(15))
+    #cap1.set(cv2.CAP_PROP_FPS, int(15))
 
     # the output will be written to output.avi
     out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'MJPG'),15., (640,480))
     print("Пуск камеры")
     while(True):
         # Capture frame-by-frame
-        ret, frame = cap1.read()
+        ret, frame = cap.read()
 
         # resizing for faster detection
         frame = cv2.resize(frame, (640, 480))
@@ -45,7 +45,7 @@ def PersonD():
             break
 
     # When everything done, release the capture
-    cap1.release()
+    cap.release()
     # and release the output
     out.release()
     # finally, close the window
