@@ -3,14 +3,21 @@ import time
 import os
 import sampleOrigins as SO
 import asyncio
+from threading import Thread, Event
+import threading
+import sys
+import time
 from func import create_user
 
-token = "Token"
+token = ""
 api = Bot(token = token, parse_mode=types.ParseMode.MARKDOWN)
 dp = Dispatcher(api)
 
+
+g1 = threading.Thread(target=SO.PersonD, args=())
 switch_index = 0
 whitelist = open("whitelist.txt", "r", encoding="utf-8").read().split(" ")
+
 
 @dp.message_handler(commands=['start'])
 async def heya(message: types.Message):
@@ -33,17 +40,23 @@ async def register(message: types.Message):
     except Exception as BadRequest:
         await message.reply(md.bold("Сообщение пустое"))
 
-
+@dp.message_handler(commands=['test'])
+async def test(message: types.Message):
+    await message.reply(md.bold('Test'))
 
 @dp.message_handler(commands=['switch'])
 async def switch(message: types.Message):
     global switch_index
     if switch_index == 0:
         switch_index += 1
-        await message.reply(md.bold("Система Включена!"))
+        await message.reply(md.bold("0"))
+        g1.start()
     else:
         switch_index -= 1
-        await message.reply(md.bold("Система Выключина!"))
+        await message.reply(md.bold("1"))
+        python = sys.executable
+        os.execl(python, python, * sys.argv)
+    
 
 @dp.message_handler(commands=['status'])
 async def status(message: types.Message):   
@@ -76,7 +89,7 @@ def logo():
                   .+hNMMMMMMNh+.                  
                       :sdds:
 
- HouSec (Alpha v0.1)
+ HouSec (Alpha v0.2)
  Made by MaKxex                                        
     """)
 logo()
