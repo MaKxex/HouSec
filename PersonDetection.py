@@ -11,11 +11,13 @@ except Exception as e:
     print(e)
     os.system('pip install cv2 & pip install cvlib & pip install matplotlib.pyplot & pip install numpy')
     os.system('humandetec.py')
+
 print("Пуск скрипта")
 
-def PersonD():
-    cv2.startWindowThread()
 
+def PersonD():
+    
+    cv2.startWindowThread()
     cap = cv2.VideoCapture(1)
 
     #cap1.set(cv2.CAP_PROP_FPS, int(15))
@@ -43,6 +45,7 @@ def PersonD():
         cv2.imshow('frame',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        time.sleep(2)
 
     # When everything done, release the capture
     cap.release()
@@ -51,3 +54,7 @@ def PersonD():
     # finally, close the window
     cv2.destroyAllWindows()
     cv2.waitKey(1)
+
+if __name__ == "__main__":
+    PersonD()
+
