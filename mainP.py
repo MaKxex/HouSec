@@ -1,12 +1,14 @@
-from func import create_user , id_creator, used_password
+from func import create_user , id_file_creator, used_password
 import PersonDetection as SO
 import time
 import os
 import sys
 import time
+import shutil
 try:
     from aiogram import Bot, Dispatcher, executor, md, types
     import asyncio
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
     from threading import Thread, Event
     import threading
 except Exception as e:
@@ -15,19 +17,36 @@ except Exception as e:
     sys.exit("Restart the script.")
 
 
-token = ""
+token = "!TOKEN!"
 api = Bot(token = token, parse_mode=types.ParseMode.MARKDOWN)
 dp = Dispatcher(api)
-
+sch = AsyncIOScheduler()
 
 g1 = threading.Thread(target=SO.PersonD, args=())
+Thread_stop = threading.Event()
 
+# -----------
 switch_index = 0
-
-
-id_creator()
+# -----------
+id_file_creator()
 dicty = {}
 whitedict = {}
+# -----------
+
+async def sendPhoto():
+    global switch_index
+    chat = int("Chat_ID")
+    if switch_index == 1:
+        if os.path.exists("./PersonHere.jpg"):
+            with open("PersonHere.jpg", "rb") as photo:
+                await api.send_photo(chat,photo)
+            shutil.move("./PersonHere.jpg","./UsedPhoto/PersonHere.jpg")
+        else:
+            print("Ничего не нашел")
+    else:
+        pass
+
+
 def WUpdater(): #Ty NeverCore
     with open("id.txt", encoding='utf-8') as f:
         for line in f:
@@ -46,9 +65,9 @@ print(whitedict)
 @dp.message_handler(commands=['start'])
 async def heya(message: types.Message):
     WUpdater()
-    id = message.chat.id
+    chat_id = message.chat.id
     if id in dicty.keys():
-        await message.reply(md.text(md.bold("Здраствуй, ", dicty.get(id))))
+        await message.reply(md.text(md.bold("Здраствуй, ", dicty.get(chat_id))))
     else:
         await message.reply(md.text(
                             md.bold("Привет, используйте команду /login чтобы зайти в систему"),
@@ -94,65 +113,71 @@ async def register(message: types.Message):
                                 sep="\n"))
     except Exception as e:
         print(e)
-        await message.reply(md.bold("Error"))
+        await message.reply(md.bold("Error in login"))
 
 @dp.message_handler(commands=['test'])
 async def test(message: types.Message):
     await message.reply(md.bold('Test'))
 
-#with open("PersonHere.jpg", "rb") as photo:
-            #await message.reply_photo(photo)
-
 @dp.message_handler(commands=['switch'])
 async def switch(message: types.Message):
+    user_id = message.chat.id 
     global switch_index
-    if switch_index == 0:
-        switch_index += 1
-        await message.reply(md.bold("0"))
-        g1.start()
-        await message.reply_photo("PersonHere.jpg")
-    else:
-        switch_index -= 1
-        await message.reply(md.bold("1"))
-        python = sys.executable
-        os.execl(python, python, * sys.argv)
-    
 
+    if user_id in dicty.keys(): # if ID in ID's pool
+        if switch_index == 0:
+            switch_index += 1
+            await message.reply(md.bold("Система видеонаблюдения включена"))
+            g1.start()
+            sch.start()
+
+        else:
+            switch_index -= 1
+            await message.reply(md.bold("Система видеонаблюдения выключена"))
+            #python = sys.executable
+            #os.execl(python, python, * sys.argv)
+    else:
+        await message.reply(md.text(
+                                md.bold("Вы не прошли Авторизацию"),
+                                md.text("Используйте команду /login"),
+                                sep="\n"))
+        
 @dp.message_handler(commands=['status'])
 async def status(message: types.Message):   
     global switch_index
     if switch_index == 0:
-        await message.reply(md.bol("Система видеонаблюдения выключена"))
+        await message.reply(md.bold("Система видеонаблюдения выключена"))
     else:
-        await message.reply(md.bol("Система видеонаблюдения включена"))
+        await message.reply(md.bold("Система видеонаблюдения включена"))
+
+'''
+@dp.message_handler(commands=['shutdown'])
+async def shutdown(message: types.Message):
+    sys.exit()
+'''
+
+
+
+sch.add_job(sendPhoto,"interval", seconds=2)
 def logo():
     print("""
-                                                  
-                      `/dd+`                      
-                    :yNMMMMNy:                    
-                ./sNMMMMMMMMMMNs/.                
-      ymmmmmmmNMMMMMMMMMMMMMMMMMMMMNmmmmmmmy      
-      hMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMh      
-      hMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMh      
-      hMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMh      
-      hMMMMMMMMMMMMMmyo+//+oymMMMMMMMMMMMMMh      
-      hMMMMMMMMMNy/`          `/yMMMMMMMMMMh      
-      hMMMMMMMNs`    .sdmmds.    `sMMMMMMMMh      
-      hMMMMMMm.     /MMMMMMMM/     .mMMMMMMh      
-      hMMMMMM.      hMds+MMMMh      .MMMMMMh      
-      hMMMMMMd.     /MMMMMMMM/     .dMMMMMMh      
-      hMMMMMMMNo`    .sdmmds.    `oNMMMMMMMh      
-      sMMMMMMMMMNy:`          `:yNMMMMMMMMMs      
-      -MMMMMMMMMMMMMdyo+//+oydMMMMMMMMMMMMM-      
-       +MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM+       
-        /NMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMN/        
-         `sMMMMMMMMMMMMMMMMMMMMMMMMMMMMs`         
-           `+dMMMMMMMMMMMMMMMMMMMMMMd+`           
-              `:smMMMMMMMMMMMMMMms:`              
-                  .+hNMMMMMMNh+.                  
-                      :sdds:
 
- HouSec (Alpha v0.2.2)
+
+     ___         ___         ___         ___         ___         ___     
+    /__/\       /  /\       /__/\       /  /\       /  /\       /  /\    
+    \  \:\     /  /::\      \  \:\     /  /:/_     /  /:/_     /  /:/    
+     \__\:\   /  /:/\:\      \  \:\   /  /:/ /\   /  /:/ /\   /  /:/     
+ ___ /  /::\ /  /:/  \:\ ___  \  \:\ /  /:/ /::\ /  /:/ /:/_ /  /:/  ___ 
+/__/\  /:/\:/__/:/ \__\:/__/\  \__\:/__/:/ /:/\:/__/:/ /:/ //__/:/  /  /\\
+\  \:\/:/__\\\  \:\ /  /:\  \:\ /  /:\  \:\/:/ /:\  \:\/:/ /:\  \:\ /  /:/
+ \  \::/     \  \:\  /:/ \  \:\  /:/ \  \::/ /:/ \  \::/ /:/ \  \:\  /:/ 
+  \  \:\      \  \:\/:/   \  \:\/:/   \__\/ /:/   \  \:\/:/   \  \:\/:/  
+   \  \:\      \  \::/     \  \::/      /__/:/     \  \::/     \  \::/   
+    \__\/       \__\/       \__\/       \__\/       \__\/       \__\/    
+
+
+
+ HouSec (Alpha v0.3)
  Made by MaKxex                                        
     """)
 logo()
